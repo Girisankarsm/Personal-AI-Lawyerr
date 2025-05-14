@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Legal Chatbot</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 500px;
+      max-width: 90%;
+      height: 600px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #0052cc;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      text-align: center;
+    }
+    .chat-messages {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f0f4f8;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      font-size: 16px;
+    }
+    .chat-input button {
+      padding: 15px;
+      background: #0052cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+    .user-message {
+      background: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .bot-message {
+      background: #e0e0e0;
+      color: black;
+      align-self: flex-start;
+    }
+    .typing-indicator {
+      font-style: italic;
+      color: #666;
+      padding-left: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">⚖️ Legal AI Chatbot</div>
+    <div class="chat-messages" id="messages"></div>
+    <div class="typing-indicator" id="typingIndicator">Bot is typing...</div>
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="Ask about Indian Constitution or say hello..." />
+      <button onclick="handleUserInput()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const legalContent = [
+    {
+  title: "Article 1",
+  source: "Constitution of India",
+  content: 'Article 1 – Name and Territory of the Union\n\nFull Text:\n(1) India, that is Bharat, shall be a Union of States.\n(2) The States and the territories thereof shall be as specified in the First Schedule.\n(3) The territory of India shall comprise —\n(a) the territories of the States;\n(b) the Union territories specified in the First Schedule; and\n(c) such other territories as may be acquired.\n\nExplanation:\nClause (1): Officially defines the country\'s name as "India, that is Bharat". Both names are constitutionally recognized.\n\nClause (2): Refers to the First Schedule which lists all the states and union territories.\n\nClause (3): Clarifies the components of Indian territory — includes states, union territories, and any future territories that may be acquired.\n\nKey Points:\n- India is called a Union of States, not a federation of states, to emphasize indivisibility and unity.\n\n- The First Schedule of the Constitution contains the names and details of states and union territories.\n\n- India can expand its territory by acquisition — a provision left open under Article 1(3)(c).'
+},
+
+{
+  title: "Article 2",
+  source: "Constitution of India",
+  content: 'Article 2 – Admission or Establishment of New States Full Text: Parliament may by law admit into the Union, or establish, new States on such terms and conditions as it thinks fit.\n\nExplanation:\nThis article empowers the Indian Parliament to admit new states into the Union or establish new states within the Union. The admission or establishment is done through a law passed by Parliament, which may decide the terms and conditions for such admission or establishment.\n\nKey Points:\n- Article 2 provides flexibility for the Union to admit new states or create new ones.\n- It is a legislative process, not a constitutional amendment, meaning it requires only a law passed by Parliament.\n- Used for the admission of states like Sikkim into India in 1975.'
+},
+  {
+    title: "Article 3",
+    source: "Constitution of India",
+    content: `Article 3 – Formation of New States and Alteration of Areas, Boundaries, or Names of Existing States
+
+Full Text:
+Parliament may by law —
+(a) form a new state by separating territory from any state or by uniting two or more states or parts of states;
+(b) increase the area of any state;
+(c) diminish the area of any state;
+(d) alter the boundaries of any state;
+(e) change the name of any state.
+
+Explanation:
+- Article 3 deals with the creation of new states, the reorganization of existing states, or the alteration of their boundaries or names.
+- It allows Parliament to:
+  - Form new states by either separating territory from an existing state or merging multiple states.
+  - Change the size or geographical boundaries of any state.
+  - Modify the name of any state.
+- The process of altering state boundaries or names requires a law passed by Parliament, but it can only be done after obtaining the recommendation of the President of India.
+
+Key Points:
+- The President’s Recommendation is mandatory before any law affecting the creation of new states or altering existing states can be introduced in Parliament.
+- The article provides a legal mechanism for the reorganization of states, which has been used historically (e.g., the bifurcation of Andhra Pradesh and Telangana in 2014).`
+  },
+  {
+    title: "Article 4",
+    source: "Constitution of India",
+    content: `Article 4 – Laws Made Under Article 3 to be Constitutional
+
+Full Text:
+Any law referred to in Article 3 which provides for the formation of a new state or the alteration of boundaries or names of any state shall not be deemed to be an amendment of this Constitution for the purposes of Article 368.
+
+Explanation:
+- Article 4 ensures that laws passed under Article 3 do not require a constitutional amendment, despite their significant impact on the country’s territorial configuration.
+- The article clarifies that such laws are not considered amendments to the Constitution under Article 368 (which deals with the amendment process), meaning they can be enacted more easily without going through the rigorous constitutional amendment procedures.
+
+Key Points:
+- Laws passed to alter state boundaries, create new states, or change names are not subjected to the formal process of constitutional amendments.
+- This article allows for greater flexibility in reorganizing the political boundaries of the nation.`
+  },
+  {
+    title: "Article 5",
+    source: "Constitution of India",
+    content: `Article 5 – Citizenship at the Commencement of the Constitution
+
+Full Text:
+At the commencement of this Constitution, every person who has his domicile in the territory of India and — 
+(a) who was born in the territory of India; or
+(b) either of whose parents was born in the territory of India; or
+(c) who has been ordinarily resident in the territory of India for not less than five years immediately preceding the commencement of this Constitution, shall be a citizen of India.
+
+Explanation:
+- Article 5 defines who qualifies as a citizen of India at the time of the adoption of the Constitution in 1950.
+- The article outlines three categories for determining Indian citizenship:
+  1. Persons born in India.
+  2. Persons whose parents were born in India.
+  3. Persons who have lived in India for at least five years before the Constitution came into effect.
+
+Key Points:
+- Domicile Requirement: The article focuses on the concept of domicile, which refers to a person’s permanent home in India.
+- Historical Context: It sets the basis for Indian citizenship at the time of the Constitution’s adoption, providing a foundation for later laws on citizenship (such as the Citizenship Act of 1955).`
+  },
+  {
+    title: "Article 6",
+    source: "Constitution of India",
+    content: "Rights of citizenship of a certain person who has migrated to India from Pakistan: Persons migrated to India from Pakistan are entitled to citizenship subject to conditions.",
+    detailed_content: "Article 6 specifically addresses the rights of individuals who migrated from Pakistan to India after the partition in 1947. It grants them the right to acquire Indian citizenship, subject to conditions set by the Government of India. It ensures that the people who were displaced due to the partition have a legal framework to claim Indian citizenship, and the conditions may include residence and registration procedures."
+  },
+  {
+    title: "Article 10",
+    source: "Constitution of India",
+    content: "Continuance of rights of citizenship: Rights of citizenship of a person shall not be affected by a change in nationality.",
+    detailed_content: "Article 10 guarantees that an individual's rights to citizenship shall remain intact, even if their nationality changes. This ensures that if a person decides to renounce their Indian nationality, their citizenship rights are preserved under the Indian Constitution, as long as they remain in India, unless their status is altered due to legal reasons like naturalization in another country."
+  },
+  {
+    title: "Article 11",
+    source: "Constitution of India",
+    content: "Parliament to regulate the right of citizenship by law: Parliament has the power to regulate citizenship through legislation.",
+    detailed_content: "Article 11 provides the Indian Parliament with the power to regulate the law relating to citizenship. This means that while the Constitution provides for the right to citizenship, the Parliament is empowered to make laws on how citizenship is acquired, terminated, or denied. It allows the government to pass detailed legislation, such as the Citizenship Act, which governs all matters related to Indian citizenship."
+  },
+  {
+    title: "Article 12",
+    source: "Constitution of India",
+    content: "Definition of the state: The state includes the Government, Parliament, and all local authorities within India.",
+    detailed_content: "Article 12 defines the 'State' under the Constitution of India, which includes not only the Government and Parliament of India but also all local authorities, such as municipalities and Panchayats. This definition is significant as it applies to the enforcement of Fundamental Rights against various authorities under Indian law. It extends the scope of fundamental rights, ensuring that any entity that exercises government powers is bound by constitutional rules."
+  },
+  {
+    title: "Article 13",
+    source: "Constitution of India",
+    content: "Laws inconsistent with or in derogation of the fundamental rights: Any law inconsistent with fundamental rights shall be void.",
+    detailed_content: "Article 13 declares that any law which contradicts or takes away the fundamental rights guaranteed by the Constitution will be considered void. It emphasizes the supremacy of fundamental rights and ensures that no law can infringe upon them. It also gives the judiciary the power to review laws and declare them unconstitutional if they violate fundamental rights."
+  },
+  {
+    title: "Article 14",
+    source: "Constitution of India",
+    content: "Equality before the law: The law shall treat all individuals equally before it.",
+    detailed_content: "Article 14 guarantees equality before the law to all individuals. It mandates that the law should treat all people equally and ensures that no individual is discriminated against by the law. This article lays down the foundation for the rule of law in India, which means that all individuals, regardless of their status, are subject to the same laws and can seek justice in the courts of law."
+  },
+  {
+    title: "Article 15",
+    source: "Constitution of India",
+    content: "Prohibition of discrimination on the grounds of religion, race, caste, sex, or place of birth: Discrimination on the above grounds is prohibited in India.",
+    detailed_content: "Article 15 of the Constitution prohibits discrimination on the grounds of religion, race, caste, sex, or place of birth. It ensures that no person is denied access to public places, education, or employment on these grounds. This article is crucial in promoting social justice and equal rights for all citizens, and it provides the foundation for policies like affirmative action to uplift marginalized groups."
+  },
+  {
+    title: "Article 16",
+    source: "Constitution of India",
+    content: "Equality of opportunity in matters of public employment: There shall be equality of opportunity for all citizens in public employment.",
+    detailed_content: "Article 16 guarantees equality of opportunity for all citizens in public employment. It ensures that no person is discriminated against based on religion, race, caste, sex, or place of birth when applying for government jobs. This article promotes a merit-based system in public services and aims to eliminate biases and favoritism in the recruitment process."
+  },
+  {
+    title: "Article 17",
+    source: "Constitution of India",
+    content: "Abolition of Untouchability: Untouchability is abolished and its practice in any form is forbidden.",
+    detailed_content: "Article 17 of the Constitution abolishes untouchability, which had been a social practice where people from certain castes were treated as inferior and excluded from mainstream society. The article prohibits discrimination against such people and criminalizes the practice of untouchability. This was a monumental step towards social equality and justice for marginalized communities in India."
+  },
+  {
+    title: "Article 18",
+    source: "Constitution of India",
+    content: "Abolition of titles: No titles except military or academic titles are allowed.",
+    detailed_content: "Article 18 of the Indian Constitution abolishes titles, ensuring that no titles (like 'Sir', 'Maharaja', etc.) will be awarded to individuals except military or academic distinctions. This article is a measure to eliminate the feudal system and emphasize the equality of all citizens. The only exceptions are military titles and academic degrees, which can be awarded based on merit. It also prevents the creation of a class of citizens with special privileges due to titles."
+  },
+  {
+    title: "Article 19",
+    source: "Constitution of India",
+    content: "Guarantees to all the citizens the six rights: Freedom of speech, assembly, association, movement, residence, and profession.",
+    detailed_content: "Article 19 guarantees the following six fundamental freedoms to all citizens of India: (1) Freedom of speech and expression, (2) Freedom to assemble peacefully and without arms, (3) Freedom to form associations and unions, (4) Freedom of movement throughout India, (5) Freedom to reside and settle in any part of India, and (6) Freedom to practice any profession, or to carry on any occupation, trade, or business. These freedoms are subject to reasonable restrictions in the interest of public order, security, and morality."
+  },
+  {
+    title: "Article 20",
+    source: "Constitution of India",
+    content: "Protection in respect of conviction for offences: No person shall be convicted for an offence except according to law.",
+    detailed_content: "Article 20 of the Constitution protects individuals from arbitrary prosecution. It includes three significant protections: (1) No ex post facto law: A person cannot be convicted for an act that was not a crime when it was committed. (2) No double jeopardy: A person cannot be tried for the same offence twice. (3) Protection from self-incrimination: A person cannot be forced to testify against themselves or provide evidence that may lead to their own conviction."
+  },
+  {
+    title: "Article 21",
+    source: "Constitution of India",
+    content: "Protection of life and personal liberty: No person shall be deprived of their life or personal liberty except by law.",
+    detailed_content: "Article 21 guarantees the protection of life and personal liberty to all persons within India. It ensures that no one can be deprived of their life or liberty except according to the procedure established by law. This article has been interpreted by the Supreme Court to cover a wide range of rights, including the right to a clean environment, the right to education, the right to live with dignity, and the right to privacy. It is one of the most fundamental rights in the Indian legal system."
+  },
+  {
+    title: "Article 22",
+    source: "Constitution of India",
+    content: "Protection against arrest and detention in certain cases: Protection from arbitrary arrest and detention.",
+    detailed_content: "Article 22 provides protection against arbitrary arrest and detention in India. It ensures that no person shall be arrested without being informed of the reasons for their arrest and gives them the right to consult a legal practitioner. The article also contains provisions for preventive detention, limiting the period a person can be detained without trial to a maximum of three months, subject to review by an Advisory Board."
+  },
+  {
+    title: "Article 23",
+    source: "Constitution of India",
+    content: "Prohibition of traffic in human beings and forced labour: Human trafficking and forced labour are prohibited.",
+    detailed_content: "Article 23 prohibits trafficking in human beings and forced labour in any form. This includes bonded labour, which involves the practice of compelling individuals to work for little or no compensation due to a debt. The article is aimed at protecting individuals from exploitation and ensuring that no one is subjected to forced or compulsory labor. Violations of this article are punishable under law."
+  },
+  {
+    title: "Article 24",
+    source: "Constitution of India",
+    content: "Prohibition of employment of children in factories and mines: Children under 14 years are prohibited from employment in factories and mines.",
+    detailed_content: "Article 24 ensures that children under the age of 14 are not employed in hazardous occupations such as factories, mines, or other dangerous settings. It aims to protect children from exploitation and provide them with the opportunity to grow and develop in a safe and nurturing environment. This article is a key provision in India's efforts to combat child labor."
+  },
+  {
+    title: "Article 25",
+    source: "Constitution of India",
+    content: "Freedom of conscience and free profession, practice, and propagation of religion: Every person has the freedom of conscience and to profess, practice, and propagate religion.",
+    detailed_content: "Article 25 guarantees every individual the right to freedom of conscience and the right to freely profess, practice, and propagate their religion. However, the article also allows the state to impose restrictions on religious practices in the interests of public order, morality, and health. The right to propagate a religion includes the right to spread one's religious beliefs and convert others, subject to the conditions mentioned above."
+  },
+  {
+    title: "Article 26",
+    source: "Constitution of India",
+    content: "Freedom to manage religious affairs: Religious denominations have the freedom to manage their own affairs.",
+    detailed_content: "Article 26 grants religious denominations the freedom to establish and manage their religious institutions and affairs. This includes the right to manage religious worship, appoint religious leaders, and determine their religious practices. The article allows religious communities to have autonomy in their internal matters without government interference, provided their activities do not conflict with public order, morality, or health."
+  },
+  {
+    title: "Article 27",
+    source: "Constitution of India",
+    content: "Freedom as to pay taxes for promotion of any particular religion: No tax shall be levied to promote any religion.",
+    detailed_content: "Article 27 ensures the secular nature of the state by prohibiting the government from imposing taxes to promote any religion. This provision protects citizens' rights to religious freedom, preventing the state from using taxpayer money to fund or support religious institutions or activities. It maintains the separation of religion and state."
+  },
+  {
+    title: "Article 28",
+    source: "Constitution of India",
+    content: "Freedom from attending religious instruction: No person shall be forced to attend religious instruction in educational institutions.",
+    detailed_content: "Article 28 guarantees that no person will be compelled to attend religious instruction or take part in religious ceremonies in educational institutions that are funded by the state. This provision is essential in maintaining the secular nature of the education system in India, ensuring that students are not coerced into participating in religious activities against their will."
+  },
+  {
+    title: "Article 29",
+    source: "Constitution of India",
+    content: "Protection of interests of minorities: Minorities have the right to conserve their language, script, and culture.",
+    detailed_content: "Article 29 protects the cultural and educational rights of minorities in India. It ensures that individuals belonging to minority communities can conserve their distinct language, script, and culture. The article also grants the right to establish educational institutions of their choice. This provision helps preserve the diversity of India by promoting the rights of linguistic, cultural, and religious minorities."
+  },
+  {
+    title: "Article 30",
+    source: "Constitution of India",
+    content: "Right of minorities to establish and administer educational institutions: Minorities can establish and administer educational institutions of their choice.",
+    detailed_content: "Article 30 guarantees that minorities (whether based on religion or language) have the right to establish and manage educational institutions of their choice. These institutions can impart education in the language and culture of the minority community. The state cannot discriminate against these institutions in terms of funding or recognition, thus promoting educational diversity."
+  },
+  {
+    title: "Article 32",
+    source: "Constitution of India",
+    content: "Remedies for enforcement of Fundamental Rights: The right to move the Supreme Court for enforcement of fundamental rights.",
+    detailed_content: "Article 32 is known as the 'Right to Constitutional Remedies'. It empowers individuals to directly approach the Supreme Court to seek enforcement of their fundamental rights if they believe that their rights have been violated. This article makes the Supreme Court the guardian of the Constitution, ensuring that individuals have an accessible avenue to protect their fundamental rights."
+  },
+  {
+    title: "Article 36",
+    source: "Constitution of India",
+    content: "Definition: Defines the term 'State' under the Constitution.",
+    detailed_content: "Article 36 provides a broad definition of the term 'State', which is crucial in interpreting various provisions of the Constitution. The term 'State' includes not only the Government of India but also the Government of each State, local authorities, and all governmental bodies. This definition is important for enforcing fundamental rights and other provisions under the Constitution."
+  },
+  {
+    title: "Article 39A",
+    source: "Constitution of India",
+    content: "Equal justice and free legal aid: Provision of free legal aid to ensure justice for all.",
+    detailed_content: "Article 39A of the Constitution ensures equal justice and free legal aid to the citizens of India. The state is obligated to provide legal assistance to individuals who are unable to afford it, ensuring that everyone has access to justice regardless of their economic background. This provision helps bridge the gap in legal access and promotes fairness in the judicial system."
+  },
+    {
+        "title": "Article 40 – Organization of a village panchayat",
+        "source": "Constitution of India",
+        "content": "The state shall organize village panchayats for local self-government. This article empowers the state to create and establish village panchayats as local governing bodies to manage the affairs at the grassroots level. It emphasizes the role of decentralized governance to ensure that local issues are managed efficiently by communities themselves."
+    },
+    {
+        "title": "Article 41 – Right to work, education, and public assistance in certain cases",
+        "source": "Constitution of India",
+        "content": "The state will secure these rights for citizens. Article 41 ensures that citizens have the right to work, education, and public assistance, particularly in cases of unemployment, old age, sickness, or disablement. It aims to provide a safety net for the most vulnerable sections of society."
+    },
+    {
+        "title": "Article 43 – Living wages, etc., for workers",
+        "source": "Constitution of India",
+        "content": "Ensure a living wage for workers and improved working conditions. The state is mandated to ensure that workers receive a living wage, which should meet their basic needs for a decent standard of living, and that they work in improved conditions, promoting fair labor practices."
+    },
+    {
+        "title": "Article 44 – Uniform civil code",
+        "source": "Constitution of India",
+        "content": "The state shall endeavor to secure a uniform civil code for the citizens. This article calls for the implementation of a uniform civil code that applies equally to all citizens, irrespective of religion or ethnicity. It aims to replace personal laws with a single legal framework."
+    },
+    {
+        "title": "Article 45 – Provision for free and compulsory education for children",
+        "source": "Constitution of India",
+        "content": "The state shall provide free and compulsory education to all children. Article 45 mandates the provision of free and compulsory education for children up to the age of 14. It aims to ensure that every child receives quality education, which is fundamental for their development and social mobility."
+    },
+    {
+        "title": "Article 46 – Promotion of educational and economic interests of scheduled castes, scheduled tribes, and OBCs",
+        "source": "Constitution of India",
+        "content": "The state shall promote the welfare of these communities. This article directs the state to protect and promote the educational and economic interests of the scheduled castes, scheduled tribes, and other backward classes (OBCs) through special measures to uplift these communities."
+    },
+    {
+        "title": "Article 47 – Duty of the state to raise the level of nutrition and the standard of living",
+        "source": "Constitution of India",
+        "content": "The state shall raise the level of nutrition and improve public health. The state is responsible for improving the nutritional standards and the overall health of the population, thus contributing to better living conditions and a healthier society."
+    },
+    {
+        "title": "Article 48 – Organization of agriculture and animal husbandry",
+        "source": "Constitution of India",
+        "content": "The state shall organize agriculture and animal husbandry on modern lines. This article calls for the modernization of agriculture and animal husbandry, ensuring that these sectors adopt scientific methods and improve productivity, thereby benefiting farmers and the economy."
+    },
+    {
+        "title": "Article 49 – Protection of monuments and places of national importance",
+        "source": "Constitution of India",
+        "content": "The state shall protect monuments and places of national importance. The government is tasked with safeguarding national heritage, including monuments and historical sites, preserving the cultural legacy of the country."
+    },
+    {
+        "title": "Article 50 – Separation of judiciary from the executive",
+        "source": "Constitution of India",
+        "content": "The state shall separate the judiciary from the executive. This article aims to ensure the independence of the judiciary by separating it from the executive, preventing interference from the executive branch in judicial matters."
+    },
+    {
+        "title": "Article 51 – Promotion of international peace and security",
+        "source": "Constitution of India",
+        "content": "The state shall promote international peace and security. India is committed to fostering international cooperation for peace, security, and disarmament, upholding its obligations in the global community to avoid conflicts and promote peaceful coexistence."
+    },
+    {
+        "title": "Article 52 – The President of India",
+        "source": "Constitution of India",
+        "content": "There shall be a President of India who shall be the head of the state. The President serves as the ceremonial head of state in India, representing the country both domestically and internationally, and performing various constitutional duties as outlined in the Constitution."
+    },
+    {
+        "title": "Article 53 – Executive Power of the Union",
+        "source": "Constitution of India",
+        "content": "The executive power of the Union is vested in the President. This article vests the executive powers of the Union in the President, who exercises them either directly or through ministers, ensuring that the central government functions effectively."
+    },
+    {
+        "title": "Article 54 – Election of President",
+        "source": "Constitution of India",
+        "content": "The President is elected by an electoral college consisting of elected members of both Houses of Parliament and the State Legislative Assemblies. This article outlines the process by which the President of India is elected, ensuring that the election is democratic and involves representatives from both central and state levels."
+    },
+    {
+        "title": "Article 61 – Procedure for Impeachment of the President",
+        "source": "Constitution of India",
+        "content": "The President can be impeached for violation of the Constitution. This article sets forth the process for impeachment of the President in case of a violation of the Constitution, ensuring accountability and adherence to constitutional values."
+    },
+    {
+        "title": "Article 63 – The Vice-President of India",
+        "source": "Constitution of India",
+        "content": "There shall be a Vice-President of India who shall be the ex-officio Chairman of the Rajya Sabha. The Vice-President serves as the second-highest constitutional authority in India, with the additional responsibility of presiding over the Rajya Sabha, the upper house of Parliament."
+    },
+    {
+        "title": "Article 64 – The Vice-President to be ex-officio Chairman of the Council of States",
+        "source": "Constitution of India",
+        "content": "The Vice-President is also the Chairman of the Rajya Sabha. This article emphasizes the role of the Vice-President as the Chairman of the Rajya Sabha, tasked with maintaining order and decorum in the house and ensuring the smooth functioning of legislative proceedings."
+    },
+    {
+        "title": "Article 66 – Election of Vice-President",
+        "source": "Constitution of India",
+        "content": "The Vice-President is elected by an electoral college of members of both Houses of Parliament. The Vice-President is elected by a body consisting of members of the Lok Sabha and Rajya Sabha, ensuring a broad representation in the election process."
+    },
+    {
+        "title": "Article 72 – Pardoning powers of President",
+        "source": "Constitution of India",
+        "content": "The President has the power to grant pardons, reprieves, respites, and remissions of punishment. The President holds discretionary powers to grant pardons or reduce punishments in certain cases, often used for humanitarian reasons or to correct judicial errors."
+    },
+    {
+        "title": "Article 74 – Council of Ministers to aid and advise President",
+        "source": "Constitution of India",
+        "content": "The President shall act on the advice of the Council of Ministers. This article establishes the principle that the President must act according to the advice of the Council of Ministers, led by the Prime Minister, making the executive accountable to the legislature."
+    },
+    {
+        "title": "Article 76 – Attorney-General for India",
+        "source": "Constitution of India",
+        "content": "The President shall appoint an Attorney-General for India to advise the Government of India. The Attorney-General is the chief legal advisor to the government of India and represents the state in legal matters, including in the Supreme Court."
+    },
+    {
+        "title": "Article 79 – Constitution of Parliament",
+        "source": "Constitution of India",
+        "content": "The Parliament consists of the President, the Lok Sabha, and the Rajya Sabha. This article defines the structure of Parliament, consisting of the President as the head and two houses: the Lok Sabha (House of the People) and the Rajya Sabha (Council of States)."
+    },
+    {
+        "title": "Article 80 – Composition of Rajya Sabha",
+        "source": "Constitution of India",
+        "content": "The Rajya Sabha consists of representatives from states and union territories. The Rajya Sabha is a permanent body that represents the states and union territories of India, with members elected by the state legislatures."
+    },
+    {
+        "title": "Article 81 – Composition of Lok Sabha",
+        "source": "Constitution of India",
+        "content": "The Lok Sabha consists of representatives elected directly by the people. The Lok Sabha is the lower house of Parliament, consisting of directly elected representatives of the people, reflecting the democratic will of the citizens."
+    },
+    {
+        "title": "Article 83 – Duration of Houses of Parliament",
+        "source": "Constitution of India",
+        "content": "The Lok Sabha and Rajya Sabha shall have a duration of five years. This article sets the term limit for both houses of Parliament to five years, after which elections are held unless the house is dissolved earlier."
+    },
+    {
+        "title": "Article 93 – The speakers and Deputy speakers of the house of the people",
+        "source": "Constitution of India",
+        "content": "The Lok Sabha shall have a Speaker and a Deputy Speaker. The Speaker presides over the Lok Sabha, ensuring the smooth conduct of proceedings, while the Deputy Speaker assists and assumes the Speaker’s role in their absence."
+    },
+    {
+        "title": "Article 105 – Powers, Privileges, etc., of the House of Parliament",
+        "source": "Constitution of India",
+        "content": "Members of Parliament have specific powers and privileges, including freedom of speech in Parliament. This article protects the rights of members of Parliament, allowing them to express themselves freely and perform their duties without fear of legal action, ensuring parliamentary independence."
+    },
+    {
+        "title": "Article 109 – Special procedure in respects of money bills",
+        "source": "Constitution of India",
+        "content": "Money bills can only be introduced in the Lok Sabha. This article establishes that money bills, which deal with government finances, can only be introduced in the Lok Sabha, ensuring that the legislative body responsible for financial matters is directly accountable to the people."
+    },
+    {
+        "title": "Article 110 – Definition of “Money Bills”",
+        "source": "Constitution of India",
+        "content": "Money bills deal with taxation, borrowing of money, or expenditure of the government. This article defines what constitutes a money bill, primarily related to the financial aspects of governance, including taxation and government spending."
+    },
+    {
+        "title": "Article 112 – Annual Financial Budget",
+        "source": "Constitution of India",
+        "content": "The Government shall present an annual financial statement (budget) before Parliament. The article mandates the presentation of the annual budget, which outlines the government's proposed expenditures and revenue collection for the upcoming financial year."
+    },
+    {
+        "title": "Article 114 – Appropriation Bills",
+        "source": "Constitution of India",
+        "content": "Appropriation Bills provide funds for government expenditures. Appropriation bills ensure that funds are allocated for government expenditures, as authorized by Parliament, to support public programs and services."
+    },
+    {
+        "title": "Article 123 – Powers of the President to promulgate Ordinances",
+        "source": "Constitution of India",
+        "content": "The President can promulgate ordinances when Parliament is not in session. This article grants the President the authority to issue ordinances on urgent matters when Parliament is not in session, which can have the force of law until Parliament reconvenes."
+    },
+    {
+        "title": "Article 132 – Appellate jurisdiction of the Supreme Court",
+        "source": "Constitution of India",
+        "content": "The Supreme Court has appellate jurisdiction over certain cases. The Supreme Court has the power to hear appeals in cases of law, disputes, and constitutional matters, ensuring that justice is upheld at the highest level."
+    },
+    {
+        "title": "Article 139A – Transfer of certain cases",
+        "source": "Constitution of India",
+        "content": "The Supreme Court can transfer cases from one High Court to another. This article allows the Supreme Court to transfer cases between High Courts to ensure that justice is served impartially and efficiently."
+    },
+    {
+        "title": "Article 146 – Appointment of officers and servants of the Supreme Court",
+        "source": "Constitution of India",
+        "content": "The President appoints officers and staff for the Supreme Court. This article authorizes the President to appoint the necessary personnel to assist in the functioning of the Supreme Court."
+    },
+    {
+        "title": "Article 148 – Comptroller and Auditor-General of India",
+        "source": "Constitution of India",
+        "content": "The Comptroller and Auditor-General audits the financial accounts of the Government. The Comptroller and Auditor-General is responsible for auditing government expenditures, ensuring that public funds are used appropriately and transparently."
+    },
+    {
+  title: "Fundamental Rights",
+  source: "Constitution of India",
+  content: `1. **Right to Equality** – Ensures equality before the law.
+2. **Right to Freedom** – Protects individual freedoms like speech, movement, and expression.
+3. **Right Against Exploitation** – Prohibits trafficking and forced labor.
+4. **Right to Freedom of Religion** – Guarantees religious freedom to all citizens.
+5. **Cultural and Educational Rights** – Protects the rights of minorities to preserve their culture and language.
+6. **Right to Constitutional Remedies** – Provides citizens the right to approach courts to enforce their fundamental rights.`
+},
+{
+  title: "The Indian Divorce Act",
+  source: "Indian Divorce Act, 1869",
+  content: `The Indian Divorce Act governs divorce among Christian couples in India. It allows legal dissolution of marriage through court petitions by either spouse. Key provisions include:
+
+**The Indian Divorce Act – An Outline**
+- Enacted in 1869, it governs Christian divorces in India.
+- Applies to Christian couples; other communities follow different laws (e.g., Hindu Marriage Act, Special Marriage Act).
+- Excludes the State of Jammu and Kashmir (unless domiciled elsewhere).
+
+**Types of Divorce Petitions**
+- *Mutual Consent*:
+  - Requires 2 years of separation.
+  - Mutual agreement on child custody, maintenance, and property.
+  - Duration: 6 to 18 months.
+- *Without Mutual Consent*:
+  - *Husband’s Petition*: Adultery by wife.
+  - *Wife’s Petition*: Grounds include adultery, conversion, bigamy, incest, rape, sodomy, cruelty, or desertion.
+
+**Alimony or Maintenance**
+- Determined by agreement or court.
+- No fixed limit; court considers income and marriage duration.
+
+**Child Custody**
+- Mutual consent: decided by both parties.
+- Contested: Court assesses parental ability.
+- Custody usually to mother; father provides financial support.
+
+**Property Rights**
+- Must be mutually settled.
+- Includes movable/immovable assets and debts.
+
+**Divorce Procedure**
+- *Petition Filing*: In district court with relevant details.
+- *First Motion*: Reviewed by court.
+- *Decree*: Granted if all conditions are met.
+
+**Required Documents**
+- Address proofs.
+- Marriage certificate.
+- Proof of 1-year separation.
+- Tax statements (last 2 years).
+- Reconciliation evidence.
+- Property and asset details.
+
+**Juridical Separation**
+- Legal separation without remarriage rights.
+- Grounds: adultery, cruelty, or desertion (2+ years).`
+}
+];
+
+    const casualReplies = {
+      "hello": "Hello! How can I assist you with legal information today?",
+      "hey": "Hey there! Ask me anything about Indian law or the Constitution.",
+      "hi": "Hi! What would you like to know about legal rights or laws?",
+      "how are you": "I'm just a bunch of code, but I'm here to help you with legal info!",
+      "good morning": "Good morning! Ready to learn some law today?",
+      "good evening": "Good evening! How can I assist you with legal topics?"
+    };
+
+    const lawJokes = [
+      "Why did the judge go to art school? Because he wanted to learn how to draw conclusions!",
+      "Why did the lawyer bring a ladder to court? He wanted to pass the bar!",
+      "Why did the Constitution go to therapy? It had too many amendments.",
+      "Why was the legal textbook so unhappy? It had too many issues.",
+      "What’s a lawyer’s favorite type of drink? Subpoena colada!"
+    ];
+
+    function displayMessage(message, sender) {
+      const msg = document.createElement('div');
+      msg.className = `message ${sender === 'user' ? 'user-message' : 'bot-message'}`;
+      msg.innerText = message;
+      document.getElementById('messages').appendChild(msg);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    function handleUserInput() {
+      const inputBox = document.getElementById("userInput");
+      const userInput = inputBox.value.trim();
+      if (!userInput) return;
+
+      displayMessage(userInput, 'user');
+      inputBox.value = '';
+      showTypingIndicator();
+
+      setTimeout(() => {
+        const response = getBotResponse(userInput);
+        displayMessage(response, 'bot');
+        hideTypingIndicator();
+      }, 1000); // Simulated delay
+    }
+
+    function getBotResponse(input) {
+  const lowerInput = input.toLowerCase();
+
+  // Casual chat responses
+  for (let greeting in casualReplies) {
+    if (lowerInput.includes(greeting)) {
+      return casualReplies[greeting];
+    }
+  }
+
+  // Jokes
+  if (lowerInput.includes("joke") || lowerInput.includes("funny")) {
+    const joke = lawJokes[Math.floor(Math.random() * lawJokes.length)];
+    return joke;
+  }
+
+  // Extract potential article number
+  const articleMatch = lowerInput.match(/article\s*(\d+[a-zA-Z]*)/);
+  if (articleMatch) {
+    const articleKey = `Article ${articleMatch[1]}`.toLowerCase();
+    for (let item of legalContent) {
+      if (item.title.toLowerCase() === articleKey) {
+        return item.content;
+      }
+    }
+  }
+
+  // Fallback: search by keyword in title or source
+  for (let item of legalContent) {
+    if (lowerInput.includes(item.title.toLowerCase()) || lowerInput.includes(item.source.toLowerCase())) {
+      return item.content;
+    }
+  }
+
+  return "I'm sorry, I couldn't find anything related. Try asking about a specific article (e.g., 'Article 21') or say 'tell me a joke'.";
+}
+
+    function showTypingIndicator() {
+      document.getElementById("typingIndicator").style.display = 'block';
+    }
+
+    function hideTypingIndicator() {
+      document.getElementById("typingIndicator").style.display = 'none';
+    }
+
+    // Allow pressing Enter to send
+    document.getElementById("userInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") handleUserInput();
+    });
+  </script>
+</body>
+</html>
